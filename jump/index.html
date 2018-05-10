@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>Page Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.bootcss.com/three.js/69/three.js"></script>
+    <script src="https://cdn.bootcss.com/jquery/1.10.2/jquery.js"></script>
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="output"></div>
+    <script>
+        function init() {
+            var cube_arr = []
+            // 场景
+            var scene = new THREE.Scene();
+
+            // 相机
+            // var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+            // 正交相机
+            var camera = new THREE.OrthographicCamera(window.innerWidth / -36, window.innerWidth / 36, window.innerHeight / 36, window.innerHeight / -36, -200, 500)
+            // var camera = new THREE.OrthographicCamera(-2, 2, 1.5, -1.5, 1, 10);
+
+            // 渲染
+            var renderer = new THREE.WebGLRenderer();
+
+            renderer.setClearColor(new THREE.Color(0xffffff));
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMapEnabled = true;
+
+            var cubeGeometry_0 = new THREE.BoxGeometry(1, 2, 1);
+            var cubeMaterial_0 = new THREE.MeshPhongMaterial({ color: 0x00ff00, wireframe: false });
+            var cube_0 = new THREE.Mesh(cubeGeometry_0, cubeMaterial_0);
+            cube_0.name = 'cube_0';
+            cube_0.position.x = 0;
+            cube_0.position.y = 2;
+            cube_0.position.z = 0;
+            cube_0.castShadow = true;
+            scene.add(cube_0);
+            cube_arr.push(cube_0)
+
+            var cubeGeometry = new THREE.BoxGeometry(4, 2, 4);
+
+            var cubeMaterial_1 = new THREE.MeshPhongMaterial({ color: 0xff0000, wireframe: false });
+            var cube_1 = new THREE.Mesh(cubeGeometry, cubeMaterial_1);
+            cube_1.name = 'cube_1';
+            cube_1.position.x = 0;
+            cube_1.position.y = 0;
+            cube_1.position.z = 0;
+            cube_1.castShadow = true;
+            scene.add(cube_1);
+            cube_arr.push(cube_1)
+
+            var cubeMaterial_2 = new THREE.MeshPhongMaterial({ color: 0x0000ff, wireframe: false });
+            var cube_2 = new THREE.Mesh(cubeGeometry, cubeMaterial_2);
+            cube_2.name = 'cube_2';
+            cube_2.position.x = 10;
+            cube_2.position.y = 0;
+            cube_2.position.z = 0;
+            cube_2.castShadow = true;
+            scene.add(cube_2);
+            cube_arr.push(cube_2)
+
+            var cubeMaterial_3 = new THREE.MeshPhongMaterial({ color: 0x00ffff, wireframe: false });
+            var cube_3 = new THREE.Mesh(cubeGeometry, cubeMaterial_3);
+            cube_3.name = 'cube_3';
+            cube_3.position.x = 10;
+            cube_3.position.y = 0;
+            cube_3.position.z = -13;
+            cube_3.castShadow = true;
+            scene.add(cube_3);
+            cube_arr.push(cube_3)
+
+            var cubeMaterial_4 = new THREE.MeshPhongMaterial({ color: 0xff00ff, wireframe: false });
+            var cube_4 = new THREE.Mesh(cubeGeometry, cubeMaterial_4);
+            cube_4.name = 'cube_4';
+            cube_4.position.x = 10;
+            cube_4.position.y = 0;
+            cube_4.position.z = -25;
+            cube_4.castShadow = true;
+            scene.add(cube_4);
+            cube_arr.push(cube_4)
+
+
+            var spotLight = new THREE.SpotLight(0xffffff);
+            spotLight.position.set(-40, 60, 40);
+            spotLight.castShadow = true;
+            scene.add(spotLight);
+
+            // camera.position.x = -30;
+            // camera.position.y = 30;
+            // camera.position.z = 30;
+
+            camera.position.set(-3, 3, 3)
+            // camera.position.set(-3, 3, 3)
+            camera.lookAt(new THREE.Vector3(0, 0, 0));
+            
+
+            $('#output').append(renderer.domElement)
+
+
+            var ready = false;
+            var ready_go = false;
+            var go = false;
+            var can_ready = true;
+
+
+            var t_0_x = cube_0.position.x;
+            var t_0_z = cube_0.position.z;
+            var next_dir = 'x';
+            var next_dir_pn = 1;
+            var step = 0.1;
+            var count = 1;
+            var length = 0;
+
+            var count_dir = function () {
+                if (count == cube_arr.length - 1) {
+                    return
+                }
+                var delta_x = cube_arr[count + 1].position.x - cube_arr[count].position.x;
+                var delta_z = cube_arr[count + 1].position.z - cube_arr[count].position.z;
+                if (Math.abs(delta_x) < 4) {
+                    next_dir = 'z';
+                    next_dir_pn = delta_z > 0 ? 1 : -1
+                } else {
+                    next_dir = 'x';
+                    next_dir_pn = delta_x > 0 ? 1 : -1
+                }
+            }
+
+            var jump_ready = function () {
+                if (ready && cube_0.position.y >= 1) {
+                    cube_0.position.y -= 0.01
+                    length += (0.15 * next_dir_pn);
+                }
+            }
+
+            var jump_ready_go = function () {
+                if (ready_go && cube_0.position.y <= 2) {
+                    cube_0.position.y += 0.1
+                }
+            }
+
+            var jump_go = function () {
+                if (go && cube_0.position.y >= 2) {
+                    ready_go = false;
+                    can_ready = false;
+
+                    if (next_dir == 'x') {
+                        cube_0.position.x += (step * next_dir_pn);
+                        var d_t_x = cube_0.position.x - t_0_x;
+                        cube_0.position.y = -0.2 * d_t_x * (d_t_x - length) + 2;
+                        cube_0.rotation.z -= 2 * Math.PI / Math.abs(length) / 10;
+                    } else if (next_dir == 'z') {
+                        cube_0.position.z += (step * next_dir_pn);
+                        var d_t_z = cube_0.position.z - t_0_z;
+                        cube_0.position.y = -0.2 * d_t_z * (d_t_z - length) + 2;
+                        cube_0.rotation.x -= 2 * Math.PI / Math.abs(length) / 10;
+                    }
+
+                    if (cube_0.position.y < 2) {
+                        cube_0.position.y = 2;
+                        cube_0.rotation.z = 0;
+                        cube_0.rotation.x = 0;
+                        go = false;
+                        can_ready = true;
+                        length = 0;
+                        if (isFall()) {
+                            alert('you fall down');    
+                        }
+                        count++;
+                        t_0_z = cube_0.position.z;
+                        count_dir();
+                    }
+                }
+            }
+
+            var isFall = function() {
+                var offset_x = Math.abs(cube_arr[count+1].position.x - cube_0.position.x);
+                var offset_z = Math.abs(cube_arr[count+1].position.z - cube_0.position.z);                
+                if (offset_x > 2 || offset_z > 2) {
+                    return true
+                }
+            }
+
+            var render = function () {
+                jump_ready();
+
+                jump_ready_go();
+
+                jump_go();
+
+                requestAnimationFrame(render);
+                renderer.render(scene, camera);
+            }
+
+            render()
+
+
+            $('body').on('keydown', function (event) {
+                if (event.key == ' ' && can_ready) {
+                    ready = true;
+                    ready_go = false;
+                }
+            })
+
+            $('body').on('touchstart', function (event) {
+                if (can_ready) {
+                    ready = true;
+                    ready_go = false;
+                }
+            })
+
+            $('body').on('keyup', function (event) {
+                if (event.key == ' ' && can_ready) {
+                    ready = false;
+                    ready_go = true;
+                    go = true;
+                }
+            })
+
+            $('body').on('touchend', function (event) {
+                if (can_ready) {
+                    ready = false;
+                    ready_go = true;
+                    go = true;
+                }
+            })
+        }
+
+        window.onload = init;
+    </script>
+</body>
+
+</html>
