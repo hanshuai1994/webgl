@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>Page Title</title>
+    <title>史诗级大作！</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.bootcss.com/three.js/69/three.js"></script>
     <script src="https://cdn.bootcss.com/jquery/1.10.2/jquery.js"></script>
@@ -96,7 +96,7 @@
             var pointLight = new THREE.PointLight(0xffffff);
             scene.add(pointLight);
 
-            var cam_x = 0;
+            var cam_x = 5;
             var cam_y = 0;
             var cam_z = 0;
 
@@ -190,8 +190,8 @@
             // 移动镜头 && 光源
             var move_lens = function () {
                 if (need_move_x || need_move_z) {
-                    var lens_delta_x = cube_arr[count].position.x - cam_x;
-                    var lens_delta_z = cube_arr[count].position.z - cam_z;
+                    var lens_delta_x = (cube_arr[count + 1].position.x + cube_arr[count].position.x) / 2 - cam_x;
+                    var lens_delta_z = (cube_arr[count + 1].position.z + cube_arr[count].position.z) / 2 - cam_z;
 
                     // 镜头X方向移动
                     if (lens_delta_x > 0.01) {
