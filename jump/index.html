@@ -98,14 +98,11 @@
             spotLight.castShadow = true;
             scene.add(spotLight);
 
-            // camera.position.x = -30;
-            // camera.position.y = 30;
-            // camera.position.z = 30;
+            var cam_x = 0;
+            var cam_y = 0;
+            var cam_z = 0;
 
-            camera.position.set(-3, 3, 3)
-            // camera.position.set(-3, 3, 3)
-            camera.lookAt(new THREE.Vector3(0, 0, 0));
-            
+
 
             $('#output').append(renderer.domElement)
 
@@ -114,6 +111,9 @@
             var ready_go = false;
             var go = false;
             var can_ready = true;
+            var need_move_x = false;
+            var need_move_z = false;
+            var lens_over = true;
 
 
             var t_0_x = cube_0.position.x;
@@ -136,6 +136,37 @@
                 } else {
                     next_dir = 'x';
                     next_dir_pn = delta_x > 0 ? 1 : -1
+                }
+            }
+
+            var move_lens = function () {
+                if (need_move_x || need_move_z) {
+                    var lens_delta_x = cube_arr[count].position.x - cam_x;
+                    var lens_delta_z = cube_arr[count].position.z - cam_z;
+
+                    // 镜头X方向移动
+                    if (lens_delta_x > 0.01) {
+                        cam_x += 0.1;
+                        lens_over = false;
+                    } else if (lens_delta_x < -0.01) {
+                        cam_x -= 0.1;
+                        lens_over = false;
+                    } else {
+                        need_move_x = false;
+                    }
+
+                    // 镜头Z方向移动
+                    if (lens_delta_z > 0.01) {
+                        cam_z += 0.1;
+                        lens_over = false;
+                    } else if (lens_delta_z < -0.01) {
+                        cam_z -= 0.1;
+                        lens_over = false;
+                    } else {
+                        need_move_z = false;
+                    }
+                } else {
+                    lens_over = true;
                 }
             }
 
@@ -177,18 +208,20 @@
                         can_ready = true;
                         length = 0;
                         if (isFall()) {
-                            alert('you fall down');    
+                            alert('you fall down');
                         }
                         count++;
+                        need_move_x = true;
+                        need_move_z = true;
                         t_0_z = cube_0.position.z;
                         count_dir();
                     }
                 }
             }
 
-            var isFall = function() {
-                var offset_x = Math.abs(cube_arr[count+1].position.x - cube_0.position.x);
-                var offset_z = Math.abs(cube_arr[count+1].position.z - cube_0.position.z);                
+            var isFall = function () {
+                var offset_x = Math.abs(cube_arr[count + 1].position.x - cube_0.position.x);
+                var offset_z = Math.abs(cube_arr[count + 1].position.z - cube_0.position.z);
                 if (offset_x > 2 || offset_z > 2) {
                     return true
                 }
@@ -201,6 +234,12 @@
 
                 jump_go();
 
+                move_lens();
+
+
+                camera.position.set(cam_x, cam_y, cam_z)
+                camera.lookAt(new THREE.Vector3(cam_x + 1, cam_y - 1, cam_z - 1));
+
                 requestAnimationFrame(render);
                 renderer.render(scene, camera);
             }
@@ -209,7 +248,7 @@
 
 
             $('body').on('keydown', function (event) {
-                if (event.key == ' ' && can_ready) {
+                if (event.key == ' ' && can_ready && lens_over) {
                     ready = true;
                     ready_go = false;
                 }
@@ -223,7 +262,7 @@
             })
 
             $('body').on('keyup', function (event) {
-                if (event.key == ' ' && can_ready) {
+                if (event.key == ' ' && can_ready && lens_over) {
                     ready = false;
                     ready_go = true;
                     go = true;
@@ -235,6 +274,22 @@
                     ready = false;
                     ready_go = true;
                     go = true;
+                }
+            })
+
+            $('body').on('keydown', function (event) {
+                if (event.key == 'ArrowUp') {    //镜头上移
+                    cam_x += 0.1;
+                    cam_z -= 0.1;
+                } else if (event.key == 'ArrowDown') {    //镜头下移
+                    cam_x -= 0.1;
+                    cam_z += 0.1;
+                } else if (event.key == 'ArrowLeft') {    //镜头左移
+                    cam_x -= 0.1;
+                    cam_z -= 0.1;
+                } else if (event.key == 'ArrowRight') {    //镜头右移
+                    cam_x += 0.1;
+                    cam_z += 0.1;
                 }
             })
         }
