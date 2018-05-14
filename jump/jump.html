@@ -22,6 +22,16 @@
             font: bold 6vw/6vw '微软雅黑';
             color: #3b99e3;
         }
+
+        /*禁用长按选择文字功能*/  
+        * {  
+            -webkit-touch-callout:none;  
+            -webkit-user-select:none;  
+            -khtml-user-select:none;  
+            -moz-user-select:none;  
+            -ms-user-select:none;  
+            user-select:none;  
+        } 
     </style>
 </head>
 
@@ -116,7 +126,7 @@
             var t_0_z = cube_0.position.z;
             var next_dir = 'x';
             var next_dir_pn = 1;
-            var step = 0.1;
+            var step = 0.2;
             var count = 1;
             var length = 0;
 
@@ -356,6 +366,11 @@
         }
 
         window.onload = init;
+
+        // 禁用长按弹出菜单,  
+        window.addEventListener('contextmenu', function(e){  
+            e.preventDefault();  
+        }); 
     </script>
 </body>
 
