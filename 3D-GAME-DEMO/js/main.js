@@ -1,8 +1,14 @@
+Physijs.scripts.worker = 'js/physijs_worker.js';
+Physijs.scripts.ammo = 'ammo.js';
+
 function init() {
     var clock = new THREE.Clock();
 
     // 场景
-    var scene = new THREE.Scene();
+    // var scene = new THREE.Scene();
+
+    var scene = new Physijs.Scene;
+    scene.setGravity(new THREE.Vector3(0, -90, 0));
 
     // 相机
     var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -22,29 +28,111 @@ function init() {
 
     // create the ground plane
 
-    var planeGeometry = new THREE.PlaneGeometry(100, 100, 1, 1);
-    var planeMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
-    // var plane = new THREE.Mesh(planeGeometry, planeMaterial);
-    var plane = createMesh(planeGeometry, 'texture_block_1.jpg');
+    // var planeGeometry = new THREE.PlaneGeometry(100, 100, 1, 1);
+    // var planeMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
+    // // var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+    // var plane = createMesh(planeGeometry, 'texture_block_1.jpg');
 
-    plane.material.map.wrapS = THREE.RepeatWrapping;
-    plane.material.map.wrapT = THREE.RepeatWrapping;
-    plane.material.map.repeat.set(50, 50)
+    // plane.material.map.wrapS = THREE.RepeatWrapping;
+    // plane.material.map.wrapT = THREE.RepeatWrapping;
+    // plane.material.map.repeat.set(50, 50)
 
-    plane.receiveShadow = true;
+    // plane.receiveShadow = true;
 
-    // rotate and position the plane
-    plane.rotation.x = -0.5 * Math.PI;
-    plane.position.x = 0;
-    plane.position.y = 0;
-    plane.position.z = 0;
+    // // rotate and position the plane
+    // plane.rotation.x = -0.5 * Math.PI;
+    // plane.position.x = 0;
+    // plane.position.y = 0;
+    // plane.position.z = 0;
 
-    // add the plane to the scene
-    scene.add(plane);
+    // // add the plane to the scene
+    // scene.add(plane);
 
-    var cubeGeometry = new THREE.BoxGeometry(2, 4, 2);
+
+    // Materials
+    ground_material = Physijs.createMaterial(
+        new THREE.MeshPhongMaterial({ map: THREE.ImageUtils.loadTexture('./img/texture_block_1.jpg') }),
+        .9, // high friction
+        .6 // low restitution
+    );
+    ground_material.map.wrapS = ground_material.map.wrapT = THREE.RepeatWrapping;
+    ground_material.map.repeat.set(30, 65);
+
+    // Ground
+    ground = new Physijs.BoxMesh(
+        new THREE.BoxGeometry(60, 1, 130),
+        ground_material,
+        0 // mass
+    );
+    ground.receiveShadow = true;
+
+
+    var borderLeft = new Physijs.BoxMesh(
+        new THREE.BoxGeometry(2, 6, 130),
+        ground_material,
+        0 // mass
+    );
+
+    borderLeft.position.x = -31;
+    borderLeft.position.y = 2;
+
+
+    ground.add(borderLeft);
+
+    var borderRight = new Physijs.BoxMesh(new THREE.BoxGeometry(2, 6, 130),
+        ground_material,
+        0 // mass
+    );
+    borderRight.position.x = 31;
+    borderRight.position.y = 2;
+
+    ground.add(borderRight);
+
+
+    var borderBottom = new Physijs.BoxMesh(
+        new THREE.BoxGeometry(64, 6, 2),
+        ground_material,
+        0 // mass
+    );
+
+    borderBottom.position.z = 65;
+    borderBottom.position.y = 2;
+    ground.add(borderBottom);
+
+    var borderTop = new Physijs.BoxMesh(
+        new THREE.BoxGeometry(64, 6, 2),
+        ground_material,
+        0 // mass
+    );
+
+    borderTop.position.z = -65;
+    borderTop.position.y = 2;
+    ground.add(borderTop);
+
+    scene.add(ground);
+
+
+    var cubeGeometry = new THREE.BoxGeometry(4, 2, 4);
     var cubeMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000 });
-    var cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+
+    var cube = new Physijs.BoxMesh(
+        new THREE.BoxGeometry(4, 2, 4),
+        //  new THREE.SphereGeometry( 2, 20 ),
+        Physijs.createMaterial(
+            new THREE.MeshPhongMaterial({
+                color: 0xff0000,
+                opacity: 0.8,
+                transparent: true
+                //  map: THREE.ImageUtils.loadTexture( '../assets/textures/general/stone.jpg' )
+            }),
+            0.5,
+            0.5
+        )
+    );
+
+    // cube.enableLinearMotor()
+
+    // var cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
     // var cube = createMesh(cubeGeometry, 'brick-wall.jpg');
     var cube_1 = createMesh(cubeGeometry, 'brick-wall.jpg');
 
@@ -74,15 +162,21 @@ function init() {
     camera.position.z = 30;
     camera.lookAt(scene.position);
 
-    var trackballControls = new THREE.TrackballControls(camera);
+    // var controls = new THREE.TrackballControls(camera);
 
-    trackballControls.rotateSpeed = 1.0;
-    trackballControls.zoomSpeed = 1.0;
-    trackballControls.panSpeed = 1.0;
+    // trackballControls.rotateSpeed = 1.0;
+    // trackballControls.zoomSpeed = 1.0;
+    // trackballControls.panSpeed = 1.0;
     // trackballControls.noZoom=false;
     // trackballControls.noPan=false;
-    trackballControls.staticMoving = true;
+    // trackballControls.staticMoving = true;
     // trackballControls.dynamicDampingFactor=0.3
+
+    var controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+    controls.maxPolarAngle = Math.PI * 0.3;
+    controls.minDistance = 50;
+    controls.maxDistance = 200;
 
     $('#output').append(renderer.domElement);
 
@@ -100,7 +194,7 @@ function init() {
     var jump_v = 15;
     var g = -9.8;
     var t = 0;
-    
+
     var go = false;
     var move_x_head = false;
     var move_x_back = false;
@@ -108,10 +202,10 @@ function init() {
     var move_z_back = false;
 
     function jump() {
-        if (go && cube.position.y>=2) {
+        if (go && cube.position.y >= 2) {
             t += step;
-            cube.position.y = jump_v*t + 1/2*g*t*t + 2;
-        } else if (cube.position.y<2) {
+            cube.position.y = jump_v * t + 1 / 2 * g * t * t + 2;
+        } else if (cube.position.y < 2) {
             go = false;
             cube.position.y = 2;
             t = 0;
@@ -139,39 +233,40 @@ function init() {
         move();
 
         var delta = clock.getDelta();
-        trackballControls.update(delta);
+        controls.update(delta);
 
         requestAnimationFrame(render);
         renderer.render(scene, camera);
+        scene.simulate();
     }
 
 
     render();
 
-    $(window).on('keydown', function(event) {
-        console.log(event);
-        
+    $(window).on('keydown', function (event) {
+        // console.log(event);
+
         if (event.key == ' ') {
             go = true;
         } else if (event.key == 'ArrowUp') {
             move_z_head = true;
-        } else if(event.key == 'ArrowDown') {
+        } else if (event.key == 'ArrowDown') {
             move_z_back = true;
-        } else if(event.key == 'ArrowLeft' ) {
+        } else if (event.key == 'ArrowLeft') {
             move_x_head = true;
-        } else if(event.key == 'ArrowRight') {
+        } else if (event.key == 'ArrowRight') {
             move_x_back = true;
         }
     })
 
-    $(window).on('keyup', function(event) {
+    $(window).on('keyup', function (event) {
         if (event.key == 'ArrowUp') {
             move_z_head = false;
-        } else if(event.key == 'ArrowDown') {
+        } else if (event.key == 'ArrowDown') {
             move_z_back = false;
-        } else if(event.key == 'ArrowLeft' ) {
+        } else if (event.key == 'ArrowLeft') {
             move_x_head = false;
-        } else if(event.key == 'ArrowRight') {
+        } else if (event.key == 'ArrowRight') {
             move_x_back = false;
         }
     })
