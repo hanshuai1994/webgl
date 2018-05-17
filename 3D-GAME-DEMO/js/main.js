@@ -1,4 +1,21 @@
 function init() {
+    var step = 0.1;
+    var jump_v = 15;
+    var g = -9.8;
+    var t = 0;
+    var bullet_inte = 0;
+    var monster_inte = 0;
+
+    var bullets = [];
+    var monsters = [];
+
+    var go = false;
+    var move_x_head = false;
+    var move_x_back = false;
+    var move_z_head = false;
+    var move_z_back = false;
+    var pause = false;
+
     var clock = new THREE.Clock();
 
     // 场景
@@ -29,7 +46,7 @@ function init() {
 
     plane.material.map.wrapS = THREE.RepeatWrapping;
     plane.material.map.wrapT = THREE.RepeatWrapping;
-    plane.material.map.repeat.set(50, 50)    
+    plane.material.map.repeat.set(50, 50)
     plane.receiveShadow = true;
 
     // rotate and position the plane
@@ -45,13 +62,6 @@ function init() {
     var player = createPlayer();
     player.position.set(0, 2, 0);
     scene.add(player);
-
-    // 创建怪物
-    var cubeGeometry = new THREE.BoxGeometry(2, 4, 2);
-    var cube_1 = createMesh(cubeGeometry, 'brick-wall.jpg');
-    cube_1.position.set(5, 2, 0);
-    scene.add(cube_1);
-
 
     // 聚光灯光源
     var spotLight = new THREE.SpotLight(0xffffff);
@@ -75,24 +85,11 @@ function init() {
 
     $('#output').append(renderer.domElement);
 
-    var step = 0.1;
-    var jump_v = 15;
-    var g = -9.8;
-    var t = 0;
-    var bullet_inte = 0;
-
-    var bullets = [];
-
-    var go = false;
-    var move_x_head = false;
-    var move_x_back = false;
-    var move_z_head = false;
-    var move_z_back = false;
 
     render();
 
     // 随机生成十六位进制数函数
-    function createHexRandom () {
+    function createHexRandom() {
         var num = '0x';
         for (var i = 0; i <= 5; i++) {
             var tmp = Math.ceil(Math.random() * 15);
@@ -134,7 +131,7 @@ function init() {
 
     // 创建子弹函数
     function createBullet() {
-        var bulletGeometry = new THREE.SphereGeometry(0.3, 20, 20);
+        var bulletGeometry = new THREE.SphereGeometry(0.3, 5, 5);
         var bulletMaterial = new THREE.MeshLambertMaterial({ color: 0x0000ff });
         var bullet = new THREE.Mesh(bulletGeometry, bulletMaterial);
         bullet.name = 'bullet'
@@ -150,9 +147,19 @@ function init() {
         scene.add(bullet_t);
     }
 
+    // 添加怪物
+    function creatMonster() {
+        var cubeGeometry = new THREE.BoxGeometry(2, 4, 2, 5, 10, 5);
+        var mon = createMesh(cubeGeometry, 'brick-wall.jpg');
+        mon.position.set(48, 2, parseInt(Math.random() * 100 - 50));
+        mon.name = 'monster'
+        monsters.push(mon);
+        scene.add(mon);
+    }
+
     function createMesh(geom, imageFile) {
         var texture = new THREE.TextureLoader().load("./img/" + imageFile);
-        var mat = new THREE.MeshPhongMaterial({map: texture});
+        var mat = new THREE.MeshPhongMaterial({ map: texture });
 
         var mesh = new THREE.Mesh(geom, mat);
         return mesh;
@@ -170,13 +177,13 @@ function init() {
     }
 
     function isCollide(originObj, otherObj) {
-        var originPoint = originObj.position.clone();        
+        var originPoint = originObj.position.clone();
 
         for (var vertexIndex = 0; vertexIndex < originObj.geometry.vertices.length; vertexIndex++) {
             // 顶点原始坐标
-            var localVertex = originObj.geometry.vertices[vertexIndex].clone();            
+            var localVertex = originObj.geometry.vertices[vertexIndex].clone();
             // 顶点经过变换后的坐标
-            var globalVertex = localVertex.applyMatrix4(originObj.matrix);            
+            var globalVertex = localVertex.applyMatrix4(originObj.matrix);
             // 获得由中心指向顶点的向量
             var directionVector = globalVertex.sub(originObj.position);
 
@@ -195,43 +202,73 @@ function init() {
 
     function move() {
         if (move_z_head) {
-            player.position.z -= step;
+            player.position.z -= step * 3;
         };
         if (move_z_back) {
-            player.position.z += step;
+            player.position.z += step * 3;
         };
         if (move_x_head) {
-            player.position.x -= step;
+            player.position.x -= step * 3;
         };
         if (move_x_back) {
-            player.position.x += step;
+            player.position.x += step * 3;
         }
+    }
+
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
 
     function render() {
-        jump();
-        move();
+        if (!pause) {
+            jump();
+            move();
 
-        if (bullets.length > 0) {
-            for (const i of bullets) {
-                if (isCollide(i, [cube_1])) {
-                    cube_1.material.color.set(createHexRandom())                   
-                }
+            if (bullets.length > 0) {
+                bullets.forEach((element, index) => {
+                    if (element.position.x > 50) {
+                        scene.remove(element);
+                        bullets.splice(index, 1);
+                    }
+                    element.position.x += step * 5;
+                });
+            };
 
-                if (i.position.x > 50) {
-                    scene.remove(i);
-                    bullets.shift();
-                    continue;
+            monsters.forEach((element, index) => {
+                if (isCollide(element, bullets)) {
+                    monsters.splice(index, 1);
+                    // element.material.color.set(createHexRandom())                   
+                    scene.remove(element);
                 }
-                i.position.x += step * 5;
+            })
+
+
+
+            if (bullet_inte > 0) {
+                bullet_inte--;
             }
-        }
 
-        if (bullet_inte > 0) {
-            bullet_inte--;
-        }
+            if (monster_inte > 0) {
+                monster_inte--
+            } else {
+                creatMonster();
+                monster_inte = 45;
+            }
 
+            monsters.forEach((element, index) => {
+                element.position.x -= step;
+                if (element.position.x < -50) {
+                    // alert('你输了');
+                    window.location.reload();
+                    return;
+                    // monsters.splice(index, 1);
+                    // scene.remove(element);
+                }
+            })
+        }
 
         var delta = clock.getDelta();
         controls.update(delta);
@@ -261,7 +298,10 @@ function init() {
             if (bullet_inte <= 0) {
                 addBullet();
                 bullet_inte = 5;
-            }  
+            }
+        }
+        if (event.key == 'p') {
+            pause = !pause;
         }
     })
 
@@ -280,6 +320,7 @@ function init() {
         }
     })
 
+    window.addEventListener('resize', onWindowResize, false);
 }
 
 window.onload = init;
